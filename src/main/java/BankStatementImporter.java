@@ -7,6 +7,7 @@ import java.util.List;
 
 public class BankStatementImporter {
 
+
     public List<Path> importFiles(Path directory) {
         List<Path> result = new ArrayList<>();
 
