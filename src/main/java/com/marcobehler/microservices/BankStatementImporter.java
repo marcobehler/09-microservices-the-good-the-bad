@@ -14,6 +14,10 @@ import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +31,28 @@ public class BankStatementImporter {
     public void run(Path dir) {
         List<Path> xmlFiles = importFiles(dir);
         List<String> xmlAsStrings = readFiles(xmlFiles);
-        validate(xmlAsStrings);
+
+        List<BankStatement> bankStatements = validate(xmlAsStrings);
+        saveToDatabase(bankStatements);
+    }
+
+    public void saveToDatabase(List<BankStatement> bankStatements) {
+        String insertStatement = "insert into bank_statements (xml, valid, message) values (?, ?, ?)";
+
+        try (Connection con = DriverManager.getConnection("jdbc:h2:~/lulu")) {
+            con.setAutoCommit(false);
+            PreparedStatement preparedStatement = con.prepareStatement(insertStatement);
+
+            for (BankStatement each : bankStatements) {
+                preparedStatement.setString(1, each.getXml());
+                preparedStatement.setBoolean(2, each.getValid());
+                preparedStatement.setString(3, each.getErrorMessage());
+                preparedStatement.executeUpdate();
+            }
+            con.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -43,32 +68,37 @@ public class BankStatementImporter {
         return result;
     }
 
-    public List<Result> validate(List<String> xmlAsStrings) {
-        List<Result> results = new ArrayList<>();
+    public List<BankStatement> validate(List<String> xmlAsStrings) {
+        List<BankStatement> bankStatements = new ArrayList<>();
+
+        String lastProcessedXml = null;
         try (InputStream is = BankStatementImporter.class.getResourceAsStream("/schema.xsd")) {
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = schemaFactory.newSchema(new StreamSource(is));
             Validator validator = schema.newValidator();
 
             for (String each : xmlAsStrings) {
+                lastProcessedXml = each;
                 StringReader reader = new StringReader(each);
                 validator.validate(new StreamSource(reader));
-                results.add(new Result(true, ""));
+                bankStatements.add(new BankStatement(true, "", lastProcessedXml));
             }
         } catch (SAXException | IOException e) {
             e.printStackTrace();
-            results.add(new Result(false, e.getMessage()));
+            bankStatements.add(new BankStatement(false, e.getMessage(), lastProcessedXml));
         }
-        return results;
+        return bankStatements;
     }
 
-    public static class Result {
+    public static class BankStatement {
         private final Boolean valid;
-        private final String message;
+        private final String errorMessage;
+        private final String xml;
 
-        public Result(Boolean valid, String message) {
+        public BankStatement(Boolean valid, String errorMessage, String xml) {
             this.valid = valid;
-            this.message = message;
+            this.errorMessage = errorMessage;
+            this.xml = xml;
         }
 
         @Override
@@ -76,17 +106,29 @@ public class BankStatementImporter {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            Result result = (Result) o;
+            BankStatement bankStatement = (BankStatement) o;
 
-            if (valid != null ? !valid.equals(result.valid) : result.valid != null) return false;
-            return message != null ? message.equals(result.message) : result.message == null;
+            if (valid != null ? !valid.equals(bankStatement.valid) : bankStatement.valid != null) return false;
+            return errorMessage != null ? errorMessage.equals(bankStatement.errorMessage) : bankStatement.errorMessage == null;
         }
 
         @Override
         public int hashCode() {
             int result = valid != null ? valid.hashCode() : 0;
-            result = 31 * result + (message != null ? message.hashCode() : 0);
+            result = 31 * result + (errorMessage != null ? errorMessage.hashCode() : 0);
             return result;
+        }
+
+        public Boolean getValid() {
+            return valid;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+        public String getXml() {
+            return xml;
         }
     }
 

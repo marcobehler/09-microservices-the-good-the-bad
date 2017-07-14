@@ -85,9 +85,19 @@ public class BankStatementImporterTest {
         Path xml = dir.resolve("yes.xml");
         Files.write(xml, xmlString.getBytes());
 
-        List<BankStatementImporter.Result> results = new BankStatementImporter().validate(Arrays.asList(xmlString));
-        assertThat(results).hasSize(1);
-        assertThat(results).containsExactly(new BankStatementImporter.Result(true, ""));
+        List<BankStatementImporter.BankStatement> bankStatements = new BankStatementImporter().validate(Arrays.asList(xmlString));
+        assertThat(bankStatements).hasSize(1);
+        assertThat(bankStatements).containsExactly(new BankStatementImporter.BankStatement(true, "", xmlString));
+    }
+
+
+
+    @Test
+    public void saveToDatabase() {
+        BankStatementImporter.BankStatement bankStatement = new BankStatementImporter.BankStatement(false, "this is an error message", "<xml2></xml>");
+        new BankStatementImporter().saveToDatabase(Arrays.asList(bankStatement));
+
+        // TODO for you : proper test assertion
     }
 
 
