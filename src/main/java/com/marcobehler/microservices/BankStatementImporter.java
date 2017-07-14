@@ -1,6 +1,5 @@
 package com.marcobehler.microservices;
 
-import okhttp3.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -15,9 +14,6 @@ import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,37 +23,71 @@ import java.util.List;
  */
 public class BankStatementImporter {
 
-    private OkHttpClient client = new OkHttpClient();
-
-    // make configurable
-    private String url = "http://localhost:8999";
-
 
     public void run(Path dir) {
-        System.out.println("Starting with xml import in dir[=" + dir.toAbsolutePath().toString() + "]");
-
-        List<Path> files = importFiles(dir);
-
-        List<String> xmls = readFiles(files);
-
-        List<Result> validationResults = validate(xmls);
-        saveToDatabase(validationResults);
-
-        postToServer(validationResults);
-
-        System.out.println("....Done!");
+        List<Path> xmlFiles = importFiles(dir);
+        List<String> xmlAsStrings = readFiles(xmlFiles);
+        validate(xmlAsStrings);
     }
 
-    private List<String> readFiles(List<Path> files) {
-        List<String> xmls = new ArrayList<>();
-        for (Path xmlFile : files) {
+
+    public List<String> readFiles(List<Path> xmlFiles) {
+        List<String> result = new ArrayList<>();
+        for (Path each : xmlFiles) {
             try {
-                xmls.add(new String(Files.readAllBytes(xmlFile), Charset.forName("UTF-8")));
+                result.add(new String(Files.readAllBytes(each), Charset.forName("UTF-8")));
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
         }
-        return xmls;
+        return result;
+    }
+
+    public List<Result> validate(List<String> xmlAsStrings) {
+        List<Result> results = new ArrayList<>();
+        try (InputStream is = BankStatementImporter.class.getResourceAsStream("/schema.xsd")) {
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = schemaFactory.newSchema(new StreamSource(is));
+            Validator validator = schema.newValidator();
+
+            for (String each : xmlAsStrings) {
+                StringReader reader = new StringReader(each);
+                validator.validate(new StreamSource(reader));
+                results.add(new Result(true, ""));
+            }
+        } catch (SAXException | IOException e) {
+            e.printStackTrace();
+            results.add(new Result(false, e.getMessage()));
+        }
+        return results;
+    }
+
+    public static class Result {
+        private final Boolean valid;
+        private final String message;
+
+        public Result(Boolean valid, String message) {
+            this.valid = valid;
+            this.message = message;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Result result = (Result) o;
+
+            if (valid != null ? !valid.equals(result.valid) : result.valid != null) return false;
+            return message != null ? message.equals(result.message) : result.message == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = valid != null ? valid.hashCode() : 0;
+            result = 31 * result + (message != null ? message.hashCode() : 0);
+            return result;
+        }
     }
 
     public List<Path> importFiles(Path dir) {
@@ -70,94 +100,6 @@ public class BankStatementImporter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return result;
-    }
-
-
-    public static class Result {
-
-        private boolean successful;
-        private String message;
-
-        public Result(boolean successful, String message) {
-            this.successful = successful;
-            this.message = message;
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-    }
-
-    private List<Result> validate(List<String> xmls) {
-        List<Result> results = new ArrayList<>();
-        try (InputStream schemaIS = BankStatementImporter.class.getResourceAsStream("/schema.xsd")) {
-            for (String xml : xmls) {
-                StringReader reader = new StringReader(xml);
-
-                SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-                Schema schema = schemaFactory.newSchema(new StreamSource(schemaIS));
-
-                Validator validator = schema.newValidator();
-                validator.validate(new StreamSource(reader));
-                results.add(new Result(true, ""));
-            }
-        } catch (SAXException | IOException e) {
-            e.printStackTrace();
-            results.add(new Result(false, e.getMessage()));
-        }
-        return results;
-    }
-
-   /* public static void main(String[] args) throws Exception {
-        Result result = new BankStatementImporter().validate(Paths.get("C:\\\\dev\\\\microservices\\\\src\\\\test\\\\resources\\\\test.xml"));
-
-        boolean successful = result.isSuccessful();
-
-        System.out.println(successful);
-
-        //  new BankStatementImporter().validate("C:\\dev\\microservices\\src\\test\\resources\\test.xml", "C:\\dev\\microservices\\src\\test\\resources\\schema.xsd");
-        //new AuditServer().start();
-        //String s = new BankStatementImporter().postToServer("<xml>juhu</xml>");
-        //System.out.println(s);
-    }*/
-
-
-    private void saveToDatabase(List<Result> validationResults) {
-
-    }
-
-    private void insertIntoDatabase(String xml, Result result) {
-        try (java.sql.Connection conn = DriverManager.getConnection("jdbc:h2:mem:exercise_db;DB_CLOSE_DELAY=-1")) {
-            conn.setAutoCommit(false);
-            PreparedStatement statement = conn.prepareStatement("insert into bla values ? ?");
-            statement.setString(1, "ble");
-            statement.setString(2, "ble");
-            statement.setString(3, "ble");
-            statement.execute();
-            conn.commit();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public String postToServer(List<Result> results) {
-        for (Result result : results) {
-            RequestBody body = RequestBody.create(MediaType.parse("application/xml; charset=utf-8"), result.getXML());
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
-                    .build();
-            try {
-                Response response = client.newCall(request).execute();
-                response.isSuccessful();
-                return response.body().string();
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
-
-        }
     }
 }
