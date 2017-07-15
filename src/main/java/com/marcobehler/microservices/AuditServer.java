@@ -30,6 +30,6 @@ public class AuditServer {
             }
         });
         server.start();
-       // server.join();
+        server.join();
     }
 }

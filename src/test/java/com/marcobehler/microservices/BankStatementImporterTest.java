@@ -100,6 +100,13 @@ public class BankStatementImporterTest {
         // TODO for you : proper test assertion
     }
 
+    @Test
+    public void forwardTest_ok() throws Exception {
+        String result = new BankStatementImporter().forwardToAuditServer(new BankStatementImporter.BankStatement(false, "", "<xml></xml>"));
+        assertThat(result).contains("OK");
+
+        // TODO for you: tests if the call fails. i.e. server unavailable or similar
+    }
 
     @After
     public void tearDown() throws Exception {

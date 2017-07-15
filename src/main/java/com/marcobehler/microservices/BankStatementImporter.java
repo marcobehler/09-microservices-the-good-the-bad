@@ -1,5 +1,6 @@
 package com.marcobehler.microservices;
 
+import okhttp3.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -34,10 +35,33 @@ public class BankStatementImporter {
 
         List<BankStatement> bankStatements = validate(xmlAsStrings);
         saveToDatabase(bankStatements);
+
+        bankStatements
+                .stream()
+                .filter(BankStatement::getValid)
+                .forEach(this::forwardToAuditServer);
+    }
+
+    public String forwardToAuditServer(BankStatement bankStatement) {
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = RequestBody.create(MediaType.parse("application/xml"), bankStatement.getXml());
+        Request request = new Request.Builder()
+                .url("http://localhost:8999")
+                .post(body)
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                System.err.println("There was a problem forwarding [xml=" + bankStatement.getXml() + "]. Double check.");
+            }
+            return response.body().string();
+        } catch (IOException e) {
+            System.err.println("There was a problem with the http request [xml=" + bankStatement.getXml() + "]");
+            return null;
+        }
     }
 
     public void saveToDatabase(List<BankStatement> bankStatements) {
-        String insertStatement = "insert into bank_statements (xml, valid, message) values (?, ?, ?)";
+        String insertStatement = "INSERT INTO bank_statements (xml, valid, message) VALUES (?, ?, ?)";
 
         try (Connection con = DriverManager.getConnection("jdbc:h2:~/lulu")) {
             con.setAutoCommit(false);
