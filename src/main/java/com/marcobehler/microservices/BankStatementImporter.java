@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -29,17 +30,36 @@ import java.util.List;
 public class BankStatementImporter {
 
 
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("You must specify a directory paramm...");
+            return;
+        }
+
+        String dir = args[0];
+        new BankStatementImporter().run(Paths.get(dir));
+    }
+
     public void run(Path dir) {
+        System.out.println("Running bankstatement importer on dir[=" + dir.toAbsolutePath().normalize().toString() + "]");
         List<Path> xmlFiles = importFiles(dir);
         List<String> xmlAsStrings = readFiles(xmlFiles);
 
         List<BankStatement> bankStatements = validate(xmlAsStrings);
         saveToDatabase(bankStatements);
+        forwardToAuditServer(bankStatements);
 
+        System.out.println("Bank Statement IMporter run finished. Check the logs for errors.");
+    }
+
+    private void forwardToAuditServer(List<BankStatement> bankStatements) {
+        System.out.println("Forwarding to Audit Server...");
         bankStatements
                 .stream()
                 .filter(BankStatement::getValid)
                 .forEach(this::forwardToAuditServer);
+
+        System.out.println("Done.");
     }
 
     public String forwardToAuditServer(BankStatement bankStatement) {
@@ -61,6 +81,7 @@ public class BankStatementImporter {
     }
 
     public void saveToDatabase(List<BankStatement> bankStatements) {
+        System.out.println("Saving our bank statements to the database....");
         String insertStatement = "INSERT INTO bank_statements (xml, valid, message) VALUES (?, ?, ?)";
 
         try (Connection con = DriverManager.getConnection("jdbc:h2:~/lulu")) {
@@ -77,6 +98,8 @@ public class BankStatementImporter {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        System.out.println("Done.");
     }
 
 
@@ -93,6 +116,7 @@ public class BankStatementImporter {
     }
 
     public List<BankStatement> validate(List<String> xmlAsStrings) {
+        System.out.println("Validating files....");
         List<BankStatement> bankStatements = new ArrayList<>();
 
         String lastProcessedXml = null;
@@ -111,6 +135,7 @@ public class BankStatementImporter {
             e.printStackTrace();
             bankStatements.add(new BankStatement(false, e.getMessage(), lastProcessedXml));
         }
+        System.out.println("Done.");
         return bankStatements;
     }
 
@@ -166,6 +191,8 @@ public class BankStatementImporter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("Found [" + result.size() + "] xml files");
         return result;
     }
 }

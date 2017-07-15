@@ -6,8 +6,27 @@
  * user guide available at https://docs.gradle.org/3.5/userguide/java_library_plugin.html
 */
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
+}
+
+
 // Apply the java-library plugin to add support for Java Library
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java-library'
+
+
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.marcobehler.microservices.BankStatementImporter'
+    }
+}
 
 // In this section you declare where to find the dependencies of your project
 repositories {
