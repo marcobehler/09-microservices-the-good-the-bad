@@ -4,6 +4,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.FileSystem;
@@ -101,6 +102,7 @@ public class BankStatementImporterTest {
     }
 
     @Test
+    @Ignore
     public void forwardTest_ok() throws Exception {
         String result = new BankStatementImporter().forwardToAuditServer(new BankStatementImporter.BankStatement(false, "", "<xml></xml>"));
         assertThat(result).contains("OK");
