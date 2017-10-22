@@ -5,8 +5,12 @@
       <profile default="true" name="Default" enabled="true" />
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="batch-cli_main" target="1.8" />
+      <module name="batch-cli_test" target="1.8" />
       <module name="microservices_main" target="1.8" />
       <module name="microservices_test" target="1.8" />
+      <module name="validation-service_main" target="1.8" />
+      <module name="validation-service_test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

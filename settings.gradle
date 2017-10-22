@@ -15,4 +15,7 @@ include 'api'
 include 'services:webservice'
 */
 
+include 'batch-cli'
+include 'validation-service'
+
 rootProject.name = 'microservices'
