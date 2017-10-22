@@ -86,16 +86,16 @@ public class BankStatementImporterTest {
         Path xml = dir.resolve("yes.xml");
         Files.write(xml, xmlString.getBytes());
 
-        List<BankStatementImporter.BankStatement> bankStatements = new BankStatementImporter().validate(Arrays.asList(xmlString));
+        List<BankStatement> bankStatements = new BankStatementImporter().validate(Arrays.asList(xmlString));
         assertThat(bankStatements).hasSize(1);
-        assertThat(bankStatements).containsExactly(new BankStatementImporter.BankStatement(true, "", xmlString));
+        assertThat(bankStatements).containsExactly(new BankStatement(true, "", xmlString));
     }
 
 
 
     @Test
     public void saveToDatabase() {
-        BankStatementImporter.BankStatement bankStatement = new BankStatementImporter.BankStatement(false, "this is an error message", "<xml2></xml>");
+        BankStatement bankStatement = new BankStatement(false, "this is an error message", "<xml2></xml>");
         new BankStatementImporter().saveToDatabase(Arrays.asList(bankStatement));
 
         // TODO for you : proper test assertion
@@ -104,7 +104,7 @@ public class BankStatementImporterTest {
     @Test
     @Ignore
     public void forwardTest_ok() throws Exception {
-        String result = new BankStatementImporter().forwardToAuditServer(new BankStatementImporter.BankStatement(false, "", "<xml></xml>"));
+        String result = new BankStatementImporter().forwardToAuditServer(new BankStatement(false, "", "<xml></xml>"));
         assertThat(result).contains("OK");
 
         // TODO for you: tests if the call fails. i.e. server unavailable or similar

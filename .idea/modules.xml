@@ -5,6 +5,9 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/batch-cli/batch-cli.iml" filepath="$PROJECT_DIR$/.idea/modules/batch-cli/batch-cli.iml" group="batch-cli" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/batch-cli/batch-cli_main.iml" filepath="$PROJECT_DIR$/.idea/modules/batch-cli/batch-cli_main.iml" group="batch-cli" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/batch-cli/batch-cli_test.iml" filepath="$PROJECT_DIR$/.idea/modules/batch-cli/batch-cli_test.iml" group="batch-cli" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/domain.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/domain.iml" group="domain" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/domain_main.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/domain_main.iml" group="domain" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/domain_test.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/domain_test.iml" group="domain" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/microservices.iml" filepath="$PROJECT_DIR$/.idea/modules/microservices.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/validation-service/validation-service.iml" filepath="$PROJECT_DIR$/.idea/modules/validation-service/validation-service.iml" group="validation-service" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/validation-service/validation-service_main.iml" filepath="$PROJECT_DIR$/.idea/modules/validation-service/validation-service_main.iml" group="validation-service" />
