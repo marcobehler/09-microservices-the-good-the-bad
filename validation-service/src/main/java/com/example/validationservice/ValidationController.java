@@ -1,8 +1,9 @@
 package com.example.validationservice;
 
 import com.marcobehler.microservices.BankStatement;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
