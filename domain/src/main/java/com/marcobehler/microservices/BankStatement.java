@@ -4,9 +4,13 @@ package com.marcobehler.microservices;
  * Thanks for watching this episode! Send any feedback to info@marcobehler.com!
  */
 public class BankStatement {
-    private final Boolean valid;
-    private final String errorMessage;
-    private final String xml;
+    private Boolean valid;
+    private String errorMessage;
+    private String xml;
+
+    public BankStatement() {
+        // easier for mapping frameworks, like jackson...
+    }
 
     public BankStatement(Boolean valid, String errorMessage, String xml) {
         this.valid = valid;

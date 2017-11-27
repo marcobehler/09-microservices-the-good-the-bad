@@ -74,22 +74,6 @@ public class BankStatementImporterTest {
         assertThat(strings).containsExactly(xmlString);
     }
 
-    @Test
-    public void successfully_validates_correct_xml_files() throws Exception {
-        String xmlString = "<transaction id=\"a89123ndsf732nf\">\n" +
-                "    <card_number>42424224242424</card_number>\n" +
-                "    <transaction_time>1495286440</transaction_time>\n" +
-                "    <amount>-1,299.00</amount>\n" +
-                "    <currency>EUR</currency>\n" +
-                "    <reference>Apple.de Fancy Macbook Pro</reference>\n" +
-                "</transaction>";
-        Path xml = dir.resolve("yes.xml");
-        Files.write(xml, xmlString.getBytes());
-
-        List<BankStatement> bankStatements = new BankStatementImporter().validate(Arrays.asList(xmlString));
-        assertThat(bankStatements).hasSize(1);
-        assertThat(bankStatements).containsExactly(new BankStatement(true, "", xmlString));
-    }
 
 
 

@@ -1,16 +1,10 @@
 package com.marcobehler.microservices;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -116,27 +110,16 @@ public class BankStatementImporter {
     }
 
     public List<BankStatement> validate(List<String> xmlAsStrings) {
-        System.out.println("Validating files....");
-        List<BankStatement> bankStatements = new ArrayList<>();
-
-        String lastProcessedXml = null;
-        try (InputStream is = BankStatementImporter.class.getResourceAsStream("/schema.xsd")) {
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = schemaFactory.newSchema(new StreamSource(is));
-            Validator validator = schema.newValidator();
-
-            for (String each : xmlAsStrings) {
-                lastProcessedXml = each;
-                StringReader reader = new StringReader(each);
-                validator.validate(new StreamSource(reader));
-                bankStatements.add(new BankStatement(true, "", lastProcessedXml));
-            }
-        } catch (SAXException | IOException e) {
-            e.printStackTrace();
-            bankStatements.add(new BankStatement(false, e.getMessage(), lastProcessedXml));
+        try {
+            ObjectMapper mapper = new ObjectMapper(); // from to json
+            OkHttpClient client = new OkHttpClient();
+            RequestBody body = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(xmlAsStrings));
+            Request request = new Request.Builder().url("http://localhost:8080/validate").post(body).build();   // TODO make url configurable!
+            Response response = client.newCall(request).execute(); // what happens if call returns 40x, 50x errors? find out in the next episodes!
+            return mapper.readValue(response.body().string(), new TypeReference<List<BankStatement>>(){}); // take the http resonse and convert the json!
+        } catch (IOException e) {
+            throw new RuntimeException(e); // log, do something else
         }
-        System.out.println("Done.");
-        return bankStatements;
     }
 
     public List<Path> importFiles(Path dir) {
