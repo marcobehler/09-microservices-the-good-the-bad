@@ -41,9 +41,11 @@ public class ValidationControllerTest {
         Path xml = dir.resolve("yes.xml");
         Files.write(xml, xmlString.getBytes());
 
-        List<BankStatement> bankStatements = new ValidationController().validate(Arrays.asList(xmlString));
+        List<BankStatement> bankStatements = new ValidationController()
+                .validate(Arrays.asList(xmlString));
         assertThat(bankStatements).hasSize(1);
-        assertThat(bankStatements).containsExactly(new BankStatement(true, "", xmlString));
+        assertThat(bankStatements)
+                .containsExactly(new BankStatement(true, "", xmlString));
     }
 
 

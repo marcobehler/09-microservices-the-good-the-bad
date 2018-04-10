@@ -110,17 +110,31 @@ public class BankStatementImporter {
     }
 
     public List<BankStatement> validate(List<String> xmlAsStrings) {
-        try {
-            ObjectMapper mapper = new ObjectMapper(); // from to json
-            OkHttpClient client = new OkHttpClient();
-            RequestBody body = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(xmlAsStrings));
-            Request request = new Request.Builder().url("http://localhost:8080/validate").post(body).build();   // TODO make url configurable!
-            Response response = client.newCall(request).execute(); // what happens if call returns 40x, 50x errors? find out in the next episodes!
-            return mapper.readValue(response.body().string(), new TypeReference<List<BankStatement>>(){}); // take the http resonse and convert the json!
-        } catch (IOException e) {
-            throw new RuntimeException(e); // log, do something else
+        return client.validate(xmlAsStrings); // delegating!
+    }
+
+
+    private ValidationClient client;
+
+    public void setClient(ValidationClient client) {
+        this.client = client;
+    }
+
+    public static class ValidationClient {
+        public List<BankStatement> validate(List<String> xmlAsStrings) {
+            try {
+                ObjectMapper mapper = new ObjectMapper(); // from to json
+                OkHttpClient client = new OkHttpClient();
+                RequestBody body = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(xmlAsStrings));
+                Request request = new Request.Builder().url("http://localhost:8080/validate").post(body).build();   // TODO make url configurable!
+                Response response = client.newCall(request).execute(); // what happens if call returns 40x, 50x errors? find out in the next episodes!
+                return mapper.readValue(response.body().string(), new TypeReference<List<BankStatement>>(){}); // take the http resonse and convert the json!
+            } catch (IOException e) {
+                throw new RuntimeException(e); // log, do something else
+            }
         }
     }
+
 
     public List<Path> importFiles(Path dir) {
         List<Path> result = new ArrayList<>();
