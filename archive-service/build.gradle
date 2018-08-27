@@ -25,10 +25,9 @@ repositories {
 dependencies {
 	compile project(":domain")
 
-	compile('org.springframework.boot:spring-boot-starter-web')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 
-	// https://mvnrepository.com/artifact/com.google.jimfs/jimfs
-	testCompile group: 'com.google.jimfs', name: 'jimfs', version: '1.1'
+	compile('org.springframework.boot:spring-boot-starter-activemq')
 
+	compile group: 'com.h2database', name: 'h2', version: '1.4.195'
 }

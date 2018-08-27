@@ -112,13 +112,6 @@ public class BankStatementImporterTest {
 
 
 
-    @Test
-    public void saveToDatabase() {
-        BankStatement bankStatement = new BankStatement(false, "this is an error message", "<xml2></xml>");
-        new BankStatementImporter().saveToDatabase(Arrays.asList(bankStatement));
-
-        // TODO for you : proper test assertion
-    }
 
     @Test
     @Ignore

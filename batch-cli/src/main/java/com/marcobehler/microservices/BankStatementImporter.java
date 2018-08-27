@@ -10,10 +10,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +36,7 @@ public class BankStatementImporter {
         List<String> xmlAsStrings = readFiles(xmlFiles);
 
         List<BankStatement> bankStatements = validate(xmlAsStrings);
-        saveToDatabase(bankStatements);
+        archiveXmls(bankStatements);
         forwardToAuditServer(bankStatements);
 
         System.out.println("Bank Statement IMporter run finished. Check the logs for errors.");
@@ -74,26 +70,18 @@ public class BankStatementImporter {
         }
     }
 
-    public void saveToDatabase(List<BankStatement> bankStatements) {
-        System.out.println("Saving our bank statements to the database....");
-        String insertStatement = "INSERT INTO bank_statements (xml, valid, message) VALUES (?, ?, ?)";
+    public void archiveXmls(List<BankStatement> bankStatements) {
+        jmsTemplate.send("archive.queue",
+                session -> {
+                    ObjectMessage message = session.createObjectMessage();
 
-        try (Connection con = DriverManager.getConnection("jdbc:h2:~/lulu")) {
-            con.setAutoCommit(false);
-            PreparedStatement preparedStatement = con.prepareStatement(insertStatement);
+                    BankStatement bankStatement = new BankStatement(false, "this is an error message", "<xml2></xml>");
+                    ArrayList<Object> list = new ArrayList<>();
+                    list.add(bankStatement);
 
-            for (BankStatement each : bankStatements) {
-                preparedStatement.setString(1, each.getXml());
-                preparedStatement.setBoolean(2, each.getValid());
-                preparedStatement.setString(3, each.getErrorMessage());
-                preparedStatement.executeUpdate();
-            }
-            con.commit();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("Done.");
+                    message.setObject(list);
+                    return message;
+                });
     }
 
 

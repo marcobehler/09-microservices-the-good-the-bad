@@ -1,9 +1,11 @@
 package com.marcobehler.microservices;
 
+import java.io.Serializable;
+
 /**
  * Thanks for watching this episode! Send any feedback to info@marcobehler.com!
  */
-public class BankStatement {
+public class BankStatement implements Serializable {
     private Boolean valid;
     private String errorMessage;
     private String xml;

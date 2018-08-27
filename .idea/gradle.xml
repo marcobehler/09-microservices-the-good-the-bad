@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/archive-service" />
             <option value="$PROJECT_DIR$/batch-cli" />
             <option value="$PROJECT_DIR$/domain" />
             <option value="$PROJECT_DIR$/validation-service" />

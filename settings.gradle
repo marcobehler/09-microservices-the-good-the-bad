@@ -17,6 +17,7 @@ include 'services:webservice'
 
 include 'batch-cli'
 include 'validation-service'
+include 'archive-service'
 include 'domain'
 
 rootProject.name = 'microservices'
