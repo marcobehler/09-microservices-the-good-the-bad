@@ -2,7 +2,7 @@ package com.example.validationservice;
 
 import com.marcobehler.microservices.BankStatement;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.xml.sax.SAXException;
 
@@ -24,7 +24,7 @@ import java.util.List;
 public class ValidationController {
 
     @PostMapping(value = "/validate")
-    public List<BankStatement> validate(@RequestParam List<String> xmlAsString) {
+    public List<BankStatement> validate(@RequestBody List<String> xmlAsString) {
 
         System.out.println("Validating files....");
         List<BankStatement> bankStatements = new ArrayList<>();
